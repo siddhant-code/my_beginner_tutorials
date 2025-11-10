@@ -3,7 +3,7 @@
 <package format="3">
   <name>beginner_tutorials</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>This is a basic publisher subscriber package</description>
   <maintainer email="iamsid@umd.edu">siddhant</maintainer>
   <license>Apache-2.0</license>
 
