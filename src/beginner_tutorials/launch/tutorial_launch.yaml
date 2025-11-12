@@ -1,0 +1,25 @@
+%YAML 1.2
+---
+launch:
+  - arg:
+        name: 'frequency'
+        default: '500'
+        description: 'Freuqncy in ms.'
+
+  - node:
+      pkg: "beginner_tutorials"
+      exec: "server"
+      args: '--ros-args --log-level debug'
+
+  - node:
+      pkg: "beginner_tutorials"
+      exec: "talker"
+      args: '--ros-args --log-level debug'
+      param:
+        - name: 'frequency'
+          value: '$(var frequency)'
+
+  - node:
+      pkg: "beginner_tutorials"
+      exec: "listener"
+      args: '--ros-args --log-level debug'
