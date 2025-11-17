@@ -1,0 +1,18 @@
+
+Files:             results/ros_bag_records/ros_bag_records_0.db3
+Bag size:          56.0 KiB
+Storage id:        sqlite3
+Duration:          30.392529097s
+Start:             Nov 17 2025 14:25:13.036414714 (1763407513.036414714)
+End:               Nov 17 2025 14:25:43.428943811 (1763407543.428943811)
+Messages:          206
+Topic information: Topic: /tf_static | Type: tf2_msgs/msg/TFMessage | Count: 2 | Serialization Format: cdr
+                   Topic: /rosout | Type: rcl_interfaces/msg/Log | Count: 112 | Serialization Format: cdr
+                   Topic: /parameter_events | Type: rcl_interfaces/msg/ParameterEvent | Count: 0 | Serialization Format: cdr
+                   Topic: /events/write_split | Type: rosbag2_interfaces/msg/WriteSplitEvent | Count: 0 | Serialization Format: cdr
+                   Topic: /chatter | Type: std_msgs/msg/String | Count: 92 | Serialization Format: cdr
+
+
+closing.
+
+closing.
