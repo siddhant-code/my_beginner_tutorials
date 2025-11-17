@@ -1,7 +1,12 @@
 /**
  * @file service_node.cpp
- * @brief Implements a ROS2 service node that toggles the case of characters in
- * a given string.
+ * @author Siddhant
+ * @brief
+ * @version 0.1
+ * @date 2025-11-17
+ *
+ * @copyright Copyright (c) 2025
+ *
  */
 
 #include "custom_interface/srv/change_case.hpp"

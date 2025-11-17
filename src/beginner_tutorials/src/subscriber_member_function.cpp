@@ -1,6 +1,13 @@
 /**
- * @file minimal_subscriber.cpp
- * @brief Subscriber node that listens to a topic and calls ChangeCase service.
+ * @file subscriber_member_function.cpp
+ * @author Siddhant
+ * @brief ROS 2 subscriber node that calls a ChangeCase service.
+ * @version 0.2
+ * @date 2025-11-17
+ *
+ * This file defines the MinimalSubscriber class, which subscribes to the
+ * "chatter" topic and calls the "change_case" service to modify text written
+ * in the received messages.
  */
 
 #include <chrono>
@@ -15,97 +22,125 @@ using namespace std::chrono_literals;
 
 /**
  * @class MinimalSubscriber
- * @brief A ROS2 node subscribing to a topic and calling ChangeCase service.
+ * @brief A ROS 2 node subscribing to text messages and invoking a ChangeCase
+ * service.
  *
- * Receives string messages on topic "topic", sends them to the "change_case"
- * service, and logs the response.
+ * The node listens to the "chatter" topic and forwards each received message
+ * to the "change_case" service. The service response is logged.
  */
 class MinimalSubscriber : public rclcpp::Node {
  public:
   /**
-   * @brief Construct a new MinimalSubscriber object.
+   * @brief Construct a new MinimalSubscriber node.
    *
-   * Initializes the subscriber.
+   * Creates a subscription to the "chatter" topic and sets up a service client
+   * for calling the ChangeCase service.
    */
   MinimalSubscriber() : Node("minimal_subscriber") {
     RCLCPP_INFO_STREAM(this->get_logger(),
                        "Initializing MinimalSubscriber node...");
 
+    // Create subscription to /chatter
     subscription_ = this->create_subscription<std_msgs::msg::String>(
-        "topic", 10,
+        "chatter", 10,
         std::bind(&MinimalSubscriber::TopicCallback, this,
                   std::placeholders::_1));
 
-    RCLCPP_INFO_STREAM(this->get_logger(), "Subscribed to topic 'topic'.");
+    RCLCPP_INFO_STREAM(this->get_logger(), "Subscribed to topic '/chatter'.");
+
+    // Log that the client node was created
+    RCLCPP_DEBUG_STREAM(
+        this->get_logger(),
+        "Service client node 'change_case_client' created successfully.");
   }
 
  private:
   /**
-   * @brief Callback function for topic subscription.
+   * @brief Topic callback executed whenever a message is received.
    *
-   * Sends the received string to the ChangeCase service and logs the output.
+   * Sends the text to the ChangeCase service and logs the formatted output.
    *
-   * @param msg Incoming message from topic.
+   * @param msg The received message.
    */
   void TopicCallback(const std_msgs::msg::String &msg) const {
     RCLCPP_INFO_STREAM(this->get_logger(),
-                       "Raw text received: '" << msg.data << "'");
+                       "Received text: '" << msg.data << "'");
 
+    // Create service request
     auto request =
         std::make_shared<custom_interface::srv::ChangeCase::Request>();
     request->input = msg.data;
 
-    while (!client->wait_for_service(1s)) {
+    // Wait for the service to become available
+    if (!client->wait_for_service(10ms)) {
       if (!rclcpp::ok()) {
         RCLCPP_ERROR_STREAM(
-            rclcpp::get_logger("rclcpp"),
-            "Interrupted while waiting for the service. Exiting.");
+            this->get_logger(),
+            "ROS interrupted while waiting for service 'change_case'.");
+        return;
       }
-      RCLCPP_INFO_STREAM(rclcpp::get_logger("rclcpp"),
-                         "Service not available, waiting again...");
+
+      RCLCPP_WARN_STREAM(this->get_logger(),
+                         "Service 'change_case' not available. Make sure the "
+                         "server is running.");
+      return;
     }
 
+    // Call the service asynchronously
     auto result_future = client->async_send_request(request);
 
-    // Wait for the result
-    if (rclcpp::spin_until_future_complete(node, result_future) ==
-        rclcpp::FutureReturnCode::SUCCESS) {
-      RCLCPP_INFO_STREAM(this->get_logger(),
-                         "Changed case of text after processing by service: '"
-                             << result_future.get()->output << "'");
+    RCLCPP_DEBUG_STREAM(this->get_logger(),
+                        "Request sent to ChangeCase service.");
+
+    // Wait and process result
+    auto result_status =
+        rclcpp::spin_until_future_complete(node, result_future);
+
+    if (result_status == rclcpp::FutureReturnCode::SUCCESS) {
+      RCLCPP_INFO_STREAM(this->get_logger(), "Service response: '"
+                                                 << result_future.get()->output
+                                                 << "'");
     } else {
-      RCLCPP_ERROR_STREAM(this->get_logger(), "Failed to call service");
+      RCLCPP_ERROR_STREAM(this->get_logger(),
+                          "Failed to call service 'change_case'.");
     }
 
-    RCLCPP_INFO_STREAM(rclcpp::get_logger("rclcpp"),
-                       "-------------------------------------------------------"
-                       "--------------------------");
+    RCLCPP_INFO_STREAM(
+        this->get_logger(),
+        "-------------------------------------------------------------");
   }
 
-  /// Subscriber to the topic
+  /// Subscriber to "chatter" topic.
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_;
 
-  /// Separate node for the service client
+  /// Node used for creating and spinning the service client.
   std::shared_ptr<rclcpp::Node> node =
       rclcpp::Node::make_shared("change_case_client");
 
-  /// Service client for ChangeCase service
+  /// Client for calling ChangeCase service.
   rclcpp::Client<custom_interface::srv::ChangeCase>::SharedPtr client =
       node->create_client<custom_interface::srv::ChangeCase>("change_case");
 };
 
 /**
- * @brief Main function for the MinimalSubscriber node.
+ * @brief Entry point for the MinimalSubscriber node.
  *
- * Initializes ROS, spins the subscriber, and shuts down.
+ * Initializes ROS 2, spins the subscriber node, and shuts down.
  *
- * @param argc Argument count
- * @param argv Argument values
- * @return int Exit status
+ * @param argc Command-line argument count.
+ * @param argv Command-line arguments.
+ * @return int Exit code.
  */
 int main(int argc, char **argv) {
+  RCLCPP_INFO_STREAM(rclcpp::get_logger("rclcpp"),
+                     "Launching MinimalSubscriber node...");
+
   rclcpp::init(argc, argv);
   rclcpp::spin(std::make_shared<MinimalSubscriber>());
   rclcpp::shutdown();
+
+  RCLCPP_INFO_STREAM(rclcpp::get_logger("rclcpp"),
+                     "MinimalSubscriber node shutdown complete.");
+
   return 0;
 }
